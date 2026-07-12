@@ -76,10 +76,25 @@ public class BookingService {
         AssetBooking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
 
+        validateStatusTransition(booking.getStatus(), request.getStatus());
+
         booking.setStatus(request.getStatus());
         booking = bookingRepository.save(booking);
 
         return bookingMapper.toResponse(booking);
+    }
+
+    private void validateStatusTransition(BookingStatus current, BookingStatus target) {
+        boolean valid = switch (current) {
+            case PENDING -> target == BookingStatus.APPROVED || target == BookingStatus.REJECTED || target == BookingStatus.CANCELLED;
+            case APPROVED -> target == BookingStatus.COMPLETED || target == BookingStatus.CANCELLED;
+            case REJECTED, CANCELLED, COMPLETED -> false;
+        };
+
+        if (!valid) {
+            throw new BadRequestException(
+                    String.format("Cannot transition booking from %s to %s", current, target));
+        }
     }
 
     @Transactional(readOnly = true)

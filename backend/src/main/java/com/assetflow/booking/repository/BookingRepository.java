@@ -22,4 +22,6 @@ public interface BookingRepository extends JpaRepository<AssetBooking, Long> {
             @Param("endTime") LocalDateTime endTime, 
             @Param("statuses") List<BookingStatus> statuses
     );
+
+    long countByStatusIn(List<BookingStatus> statuses);
 }

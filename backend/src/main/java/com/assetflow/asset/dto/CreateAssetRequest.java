@@ -1,6 +1,6 @@
 package com.assetflow.asset.dto;
 
-import com.assetflow.asset.entity.AssetCondition;
+import com.assetflow.common.enums.AssetCondition;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

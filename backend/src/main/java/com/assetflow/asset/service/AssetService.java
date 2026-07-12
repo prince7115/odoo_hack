@@ -5,10 +5,11 @@ import com.assetflow.asset.dto.AssetSearchCriteria;
 import com.assetflow.asset.dto.CreateAssetRequest;
 import com.assetflow.asset.dto.UpdateAssetRequest;
 import com.assetflow.asset.entity.Asset;
-import com.assetflow.asset.entity.AssetStatus;
+import com.assetflow.common.enums.AssetStatus;
 import com.assetflow.asset.mapper.AssetMapper;
 import com.assetflow.asset.repository.AssetRepository;
 import com.assetflow.common.dto.PagedResponse;
+import com.assetflow.common.exception.ConflictException;
 import com.assetflow.common.exception.ResourceNotFoundException;
 import com.assetflow.assetcategory.entity.AssetCategory;
 import com.assetflow.department.entity.Department;
@@ -39,7 +40,7 @@ public class AssetService {
     public AssetResponse createAsset(CreateAssetRequest request) {
         if (request.getSerialNumber() != null && !request.getSerialNumber().isBlank() &&
                 assetRepository.existsBySerialNumber(request.getSerialNumber())) {
-            throw new IllegalArgumentException("Asset with serial number " + request.getSerialNumber() + " already exists");
+            throw new ConflictException("Asset with serial number " + request.getSerialNumber() + " already exists");
         }
 
         AssetCategory category = assetCategoryRepository.findById(request.getCategoryId())
@@ -82,7 +83,7 @@ public class AssetService {
         if (request.getSerialNumber() != null && !request.getSerialNumber().isBlank() &&
                 !request.getSerialNumber().equals(asset.getSerialNumber()) &&
                 assetRepository.existsBySerialNumber(request.getSerialNumber())) {
-            throw new IllegalArgumentException("Asset with serial number " + request.getSerialNumber() + " already exists");
+            throw new ConflictException("Asset with serial number " + request.getSerialNumber() + " already exists");
         }
 
         AssetCategory category = assetCategoryRepository.findById(request.getCategoryId())

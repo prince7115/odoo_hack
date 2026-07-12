@@ -1,6 +1,8 @@
 package com.assetflow.asset.entity;
 
 import com.assetflow.common.entity.BaseEntity;
+import com.assetflow.common.enums.AssetCondition;
+import com.assetflow.common.enums.AssetStatus;
 import com.assetflow.assetcategory.entity.AssetCategory;
 import com.assetflow.department.entity.Department;
 

@@ -1,7 +1,7 @@
 package com.assetflow.asset.dto;
 
-import com.assetflow.asset.entity.AssetCondition;
-import com.assetflow.asset.entity.AssetStatus;
+import com.assetflow.common.enums.AssetCondition;
+import com.assetflow.common.enums.AssetStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

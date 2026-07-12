@@ -1,6 +1,7 @@
 package com.assetflow.asset.repository;
 
 import com.assetflow.asset.entity.Asset;
+import com.assetflow.common.enums.AssetStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -9,4 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface AssetRepository extends JpaRepository<Asset, Long>, JpaSpecificationExecutor<Asset> {
     boolean existsByAssetTag(String assetTag);
     boolean existsBySerialNumber(String serialNumber);
+    long countByStatus(AssetStatus status);
 }

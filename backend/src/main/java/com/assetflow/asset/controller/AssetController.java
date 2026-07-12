@@ -4,7 +4,7 @@ import com.assetflow.asset.dto.AssetResponse;
 import com.assetflow.asset.dto.AssetSearchCriteria;
 import com.assetflow.asset.dto.CreateAssetRequest;
 import com.assetflow.asset.dto.UpdateAssetRequest;
-import com.assetflow.asset.entity.AssetStatus;
+import com.assetflow.common.enums.AssetStatus;
 import com.assetflow.asset.service.AssetService;
 import com.assetflow.common.dto.ApiResponse;
 import com.assetflow.common.dto.PagedResponse;

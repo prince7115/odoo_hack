@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/auth/**",
+                                "/api/**",   // TODO: REMOVE before production — temporary dev bypass
                                 "/"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

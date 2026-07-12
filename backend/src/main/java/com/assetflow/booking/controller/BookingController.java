@@ -5,7 +5,7 @@ import com.assetflow.booking.dto.CreateBookingRequest;
 import com.assetflow.booking.dto.UpdateBookingStatusRequest;
 import com.assetflow.booking.service.BookingService;
 import com.assetflow.common.dto.ApiResponse;
-import com.assetflow.auth.dto.UserInfo;
+import com.assetflow.employee.entity.Employee;
 import com.assetflow.security.CurrentUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,16 +32,16 @@ public class BookingController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<BookingResponse>> createBooking(
             @Valid @RequestBody CreateBookingRequest request,
-            @CurrentUser UserInfo userInfo) {
-        BookingResponse response = bookingService.createBooking(request, userInfo.getId());
+            @CurrentUser Employee employee) {
+        BookingResponse response = bookingService.createBooking(request, employee.getId());
         return ResponseEntity.ok(ApiResponse.success("Booking created successfully", response));
     }
 
     @GetMapping("/my-bookings")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookings(
-            @CurrentUser UserInfo userInfo) {
-        List<BookingResponse> responses = bookingService.getMyBookings(userInfo.getId());
+            @CurrentUser Employee employee) {
+        List<BookingResponse> responses = bookingService.getMyBookings(employee.getId());
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
