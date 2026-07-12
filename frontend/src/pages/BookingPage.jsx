@@ -314,12 +314,18 @@ export default function BookingPage() {
 
       {/* ── Book Resource Modal ── */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-          <div className="modal-header">
-            <h2>Book a Resource</h2>
-            <button className="modal-close" onClick={() => setShowModal(false)}><span className="material-symbols-outlined">close</span></button>
-          </div>
-          <div className="modal-body">
+        <Modal
+          title="Book a Resource"
+          onClose={() => setShowModal(false)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSave}>
+                <span className="material-symbols-outlined">event_available</span> Confirm Booking
+              </button>
+            </>
+          }
+        >
             {formError && (
               <div className={`form-error-msg ${conflict ? 'form-error-conflict' : ''}`}>
                 <span className="material-symbols-outlined">{conflict ? 'warning' : 'error'}</span>
@@ -375,13 +381,6 @@ export default function BookingPage() {
                 </div>
               </div>
             )}
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSave}>
-              <span className="material-symbols-outlined">event_available</span> Confirm Booking
-            </button>
-          </div>
         </Modal>
       )}
     </div>

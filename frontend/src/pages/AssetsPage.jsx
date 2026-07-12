@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Modal from '../components/Modal'
 import '../components/shared.css'
 import './AssetsPage.css'
@@ -100,6 +100,7 @@ export default function AssetsPage() {
   const [categories, setCategories]   = useState([])
   const [departments, setDepartments] = useState([])
   const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState(null)
 
   const [search, setSearch]           = useState('')
   const [filterCat, setFilterCat]     = useState('')
@@ -111,27 +112,26 @@ export default function AssetsPage() {
   const [formError, setFormError]     = useState('')
   const [selectedAsset, setSelectedAsset] = useState(null)
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
+  const fetchAll = useCallback(async () => {
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
       const [assetsRes, catsRes, deptsRes] = await Promise.all([
         assetService.getAll(),
         categoryService.getAll(),
         departmentService.getAll()
       ])
-      setAssets(assetsRes.data || [])
-      setCategories(catsRes.data || [])
-      setDepartments(deptsRes.data || [])
+      setAssets(assetsRes.data || assetsRes || [])
+      setCategories(catsRes.data || catsRes || [])
+      setDepartments(deptsRes.data || deptsRes || [])
     } catch (err) {
-      console.error(err)
+      setError(err.response?.data?.message || 'Failed to load assets')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { fetchAll() }, [fetchAll])
 
   /* Filtering */
   const filtered = assets.filter(a => {
@@ -161,10 +161,12 @@ export default function AssetsPage() {
         departmentId: form.departmentId ? Number(form.departmentId) : null,
         serialNumber: form.serialNumber,
         location: form.location,
+        assetCondition: form.condition || 'NEW',
+        bookable: form.bookable || false,
         purchaseCost: form.purchaseCost ? Number(form.purchaseCost) : null,
         purchaseDate: form.purchaseDate || null
       })
-      await fetchData()
+      await fetchAll()
       setForm(emptyForm)
       setFormError('')
       setShowModal(false)
@@ -332,14 +334,18 @@ export default function AssetsPage() {
 
       {/* ── Register Asset Modal ── */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-          <div className="modal-header">
-            <h2>Register New Asset</h2>
-            <button className="modal-close" onClick={() => setShowModal(false)}>
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-          <div className="modal-body">
+        <Modal
+          title="Register New Asset"
+          onClose={() => setShowModal(false)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSave}>
+                <span className="material-symbols-outlined">add</span> Register Asset
+              </button>
+            </>
+          }
+        >
             {formError && <div className="form-error-msg"><span className="material-symbols-outlined">error</span>{formError}</div>}
 
             <div className="form-field">
@@ -394,13 +400,6 @@ export default function AssetsPage() {
                 <span>This asset is bookable by employees</span>
               </label>
             </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSave}>
-              <span className="material-symbols-outlined">add</span> Register Asset
-            </button>
-          </div>
         </Modal>
       )}
 

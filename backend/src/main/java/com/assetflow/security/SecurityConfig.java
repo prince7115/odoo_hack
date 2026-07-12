@@ -17,7 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity // Temporarily disabled for testing so all APIs are open
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -43,7 +43,6 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/auth/**",
-                                "/api/**",   // TODO: REMOVE before production — temporary dev bypass
                                 "/"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

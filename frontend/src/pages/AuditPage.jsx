@@ -273,12 +273,18 @@ export default function AuditPage() {
 
       {/* ── New Audit Cycle Modal ── */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-          <div className="modal-header">
-            <h2>New Audit Cycle</h2>
-            <button className="modal-close" onClick={() => setShowModal(false)}><span className="material-symbols-outlined">close</span></button>
-          </div>
-          <div className="modal-body">
+        <Modal
+          title="New Audit Cycle"
+          onClose={() => setShowModal(false)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveCycle}>
+                <span className="material-symbols-outlined">fact_check</span> Create Cycle
+              </button>
+            </>
+          }
+        >
             {formError && <div className="form-error-msg"><span className="material-symbols-outlined">error</span>{formError}</div>}
             <div className="form-field">
               <label>Cycle Name <span className="required">*</span></label>
@@ -303,13 +309,6 @@ export default function AuditPage() {
               <input className="form-input" placeholder="e.g. Priya Shah, Rohan Mehta" value={form.auditors} onChange={e => setForm(f => ({ ...f, auditors: e.target.value }))} />
               <span style={{ fontSize: 11, color: 'var(--outline)', marginTop: 4 }}>Comma-separated names</span>
             </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSaveCycle}>
-              <span className="material-symbols-outlined">fact_check</span> Create Cycle
-            </button>
-          </div>
         </Modal>
       )}
     </div>

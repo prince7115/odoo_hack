@@ -178,12 +178,18 @@ export default function MaintenancePage() {
 
       {/* ── Raise Request Modal ── */}
       {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-          <div className="modal-header">
-            <h2>Raise Maintenance Request</h2>
-            <button className="modal-close" onClick={() => setShowModal(false)}><span className="material-symbols-outlined">close</span></button>
-          </div>
-          <div className="modal-body">
+        <Modal
+          title="Raise Maintenance Request"
+          onClose={() => setShowModal(false)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSave}>
+                <span className="material-symbols-outlined">build</span> Submit Request
+              </button>
+            </>
+          }
+        >
             {formError && <div className="form-error-msg"><span className="material-symbols-outlined">error</span>{formError}</div>}
             <div className="form-field">
               <label>Asset <span className="required">*</span></label>
@@ -213,13 +219,6 @@ export default function MaintenancePage() {
                 placeholder="Describe the issue in detail…"
                 value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} />
             </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSave}>
-              <span className="material-symbols-outlined">build</span> Submit Request
-            </button>
-          </div>
         </Modal>
       )}
     </div>

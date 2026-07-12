@@ -11,7 +11,7 @@ const assetService = {
 
   update: (id, data) => api.put(`/api/assets/${id}`, data).then((res) => res.data),
 
-  updateStatus: (id, status) => api.patch(`/api/assets/${id}/status`, { status }).then((res) => res.data),
+  updateStatus: (id, status) => api.patch(`/api/assets/${id}/status`, null, { params: { status } }).then((res) => res.data),
 
   delete: (id) => api.delete(`/api/assets/${id}`).then((res) => res.data),
 }

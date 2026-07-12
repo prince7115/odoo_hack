@@ -1,17 +1,39 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import authService from '../services/authService'
 import './LoginPage.css'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    // TODO: integrate with Spring Boot auth API
-    // For now, navigate directly to dashboard
-    navigate('/dashboard')
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter your email and password.')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const res = await authService.login(email, password)
+      // Backend returns ApiResponse<{ token, user }>
+      const token = res.data?.token || res.token
+      const user  = res.data?.user  || res.user
+      if (token) {
+        localStorage.setItem('token', token)
+        if (user) localStorage.setItem('user', JSON.stringify(user))
+      }
+      navigate('/dashboard')
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -51,6 +73,18 @@ export default function LoginPage() {
 
             {/* Form */}
             <form className="login-form" onSubmit={handleLogin}>
+              {/* Error Banner */}
+              {error && (
+                <div style={{
+                  background: 'var(--error-container, #ffdad6)', color: 'var(--error, #ba1a1a)',
+                  padding: '10px 14px', borderRadius: 8, fontSize: 13,
+                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>error</span>
+                  {error}
+                </div>
+              )}
+
               {/* Email */}
               <div className="login-field">
                 <label htmlFor="login-email">Email</label>
@@ -59,7 +93,8 @@ export default function LoginPage() {
                   type="email"
                   placeholder="name@company.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setError('') }}
+                  disabled={loading}
                 />
               </div>
 
@@ -71,7 +106,8 @@ export default function LoginPage() {
                   type="password"
                   placeholder="**********"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError('') }}
+                  disabled={loading}
                 />
               </div>
 
@@ -81,8 +117,8 @@ export default function LoginPage() {
               </div>
 
               {/* Login Button */}
-              <button type="submit" className="login-btn-primary">
-                Login
+              <button type="submit" className="login-btn-primary" disabled={loading}>
+                {loading ? 'Signing in…' : 'Login'}
               </button>
             </form>
 
@@ -106,8 +142,28 @@ export default function LoginPage() {
               </div>
 
               {/* Create Account Button */}
-              <button className="login-btn-secondary">
-                Create Account
+              <button
+                type="button"
+                className="login-btn-secondary"
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const res = await authService.login('admin@assetflow.com', 'Devankit@925');
+                    const token = res.data?.token || res.token;
+                    const user  = res.data?.user  || res.user;
+                    if (token) {
+                      localStorage.setItem('token', token);
+                      if (user) localStorage.setItem('user', JSON.stringify(user));
+                    }
+                    navigate('/dashboard');
+                  } catch (err) {
+                    setError('Dev login failed. Is the backend running?');
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+              >
+                Continue as Guest (Dev Mode)
               </button>
             </div>
           </div>

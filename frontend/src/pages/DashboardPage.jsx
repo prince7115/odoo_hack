@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import '../components/shared.css'
 import './DashboardPage.css'
 import dashboardService from '../services/dashboardService'
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -14,7 +16,8 @@ export default function DashboardPage() {
       setError(null)
       try {
         const res = await dashboardService.getStats()
-        setStats(res.data)
+        // res is the ApiResponse object: { success, message, data: DashboardStats }
+        setStats(res.data || res)
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load dashboard stats')
       } finally {
@@ -26,20 +29,20 @@ export default function DashboardPage() {
 
   const kpiData = stats
     ? [
-        { label: 'Total Assets', value: String(stats.totalAssets), icon: 'inventory_2' },
-        { label: 'Available', value: String(stats.availableAssets), icon: 'check_circle' },
-        { label: 'Allocated', value: String(stats.allocatedAssets), icon: 'assignment_ind' },
-        { label: 'Under Maintenance', value: String(stats.underMaintenanceAssets), icon: 'build' },
-        { label: 'Active Bookings', value: String(stats.activeBookings), icon: 'event_available' },
-        { label: 'Pending Bookings', value: String(stats.pendingBookings), icon: 'pending_actions', className: stats.pendingBookings > 0 ? 'alert' : '' },
+        { label: 'Total Assets', value: String(stats.totalAssets ?? 0), icon: 'inventory_2' },
+        { label: 'Available', value: String(stats.availableAssets ?? 0), icon: 'check_circle' },
+        { label: 'Allocated', value: String(stats.allocatedAssets ?? 0), icon: 'assignment_ind' },
+        { label: 'Under Maintenance', value: String(stats.underMaintenanceAssets ?? 0), icon: 'build' },
+        { label: 'Active Bookings', value: String(stats.activeBookings ?? 0), icon: 'event_available' },
+        { label: 'Pending Bookings', value: String(stats.pendingBookings ?? 0), icon: 'pending_actions', className: stats.pendingBookings > 0 ? 'alert' : '' },
       ]
     : []
 
   const summaryCards = stats
     ? [
-        { label: 'Employees', value: String(stats.totalEmployees), icon: 'people' },
-        { label: 'Departments', value: String(stats.totalDepartments), icon: 'domain' },
-        { label: 'Categories', value: String(stats.totalCategories), icon: 'category' },
+        { label: 'Employees', value: String(stats.totalEmployees ?? 0), icon: 'people' },
+        { label: 'Departments', value: String(stats.totalDepartments ?? 0), icon: 'domain' },
+        { label: 'Categories', value: String(stats.totalCategories ?? 0), icon: 'category' },
       ]
     : []
 
@@ -49,15 +52,15 @@ export default function DashboardPage() {
       <div className="dashboard-header">
         <h1>Today's Overview</h1>
         <div className="dashboard-header-actions">
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={() => navigate('/assets')}>
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add</span>
             Register Asset
           </button>
-          <button className="btn-outline">
+          <button className="btn-outline" onClick={() => navigate('/booking')}>
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>event</span>
             Book Resource
           </button>
-          <button className="btn-outline">
+          <button className="btn-outline" onClick={() => navigate('/maintenance')}>
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>report_problem</span>
             Raise Request
           </button>

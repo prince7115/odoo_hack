@@ -11,6 +11,14 @@ import AuditPage from './pages/AuditPage'
 import ReportsPage from './pages/ReportsPage'
 import NotificationsPage from './pages/NotificationsPage'
 
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
+
 function App() {
   return (
     <Routes>
@@ -18,7 +26,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
 
       {/* Protected routes with sidebar layout */}
-      <Route path="/" element={<AppLayout />}>
+      <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard"      element={<DashboardPage />} />
         <Route path="org-setup"      element={<OrgSetupPage />} />

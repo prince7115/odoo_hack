@@ -1,36 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Modal from '../components/Modal'
 import '../components/shared.css'
 import './AllocationPage.css'
+import allocationService from '../services/allocationService'
+import assetService from '../services/assetService'
+import employeeService from '../services/employeeService'
 
-/* ─── Seed Data ─────────────────────────────── */
-const seedAllocations = [
-  { id: 1,  asset: 'Dell Laptop XPS 15',        tag: 'AF-0114', employee: 'Priya Shah',   dept: 'IT Dept',       allocated: '2024-03-01', expectedReturn: '2025-03-01', status: 'Active',    conditionNotes: 'Good condition at allocation', initials: 'PS', color: 'rose' },
-  { id: 2,  asset: 'Toyota Innova',              tag: 'AF-0078', employee: 'Rohan Mehta',  dept: 'Facilities',    allocated: '2023-11-15', expectedReturn: '2024-11-15', status: 'Active',    conditionNotes: 'Minor scratch on rear bumper', initials: 'RM', color: 'teal' },
-  { id: 3,  asset: 'iPhone 14 Pro (Company)',    tag: 'AF-0105', employee: 'Aditi Rao',    dept: 'Engineering',   allocated: '2024-01-10', expectedReturn: '2025-01-10', status: 'Active',    conditionNotes: '', initials: 'AR', color: 'blue' },
-  { id: 4,  asset: 'Spectrum Analyzer R&S',      tag: 'AF-0088', employee: 'Arjun Nair',   dept: 'Engineering',   allocated: '2024-02-20', expectedReturn: '2024-08-20', status: 'Overdue',   conditionNotes: 'Lab equipment — handle with care', initials: 'AN', color: 'orange' },
-  { id: 5,  asset: 'Canon DSLR EOS 90D',         tag: 'AF-0007', employee: 'Vikram Das',   dept: 'Procurement',   allocated: '2023-05-01', expectedReturn: '2024-05-01', status: 'Returned',  conditionNotes: 'Returned in good condition', initials: 'VD', color: 'blue' },
-]
-
-const seedTransfers = [
-  { id: 1, asset: 'Dell Laptop XPS 15',       tag: 'AF-0114', from: 'Priya Shah',   to: 'Arjun Nair',   reason: 'Department reassignment',    status: 'Pending',  date: '2024-07-10' },
-  { id: 2, asset: 'Epson Projector EB-S41',   tag: 'AF-0062', from: 'Rohan Mehta',  to: 'Sana Iqbal',   reason: 'Field Ops needs projector',  status: 'Approved', date: '2024-07-08' },
-  { id: 3, asset: 'LG 32" Monitor 4K',        tag: 'AF-0022', from: 'Aditi Rao',    to: 'Vikram Das',   reason: 'Design Studio to Procurement', status: 'Reallocated', date: '2024-07-01' },
-  { id: 4, asset: 'Cisco IP Phone 8841',      tag: 'AF-0130', from: 'Reception',    to: 'Aditi Rao',    reason: 'Reception desk cleared',     status: 'Rejected', date: '2024-06-28' },
-]
-
-const EMPLOYEES = ['Priya Shah', 'Rohan Mehta', 'Aditi Rao', 'Arjun Nair', 'Vikram Das', 'Sana Iqbal']
-const ASSETS_AVAILABLE = [
-  { tag: 'AF-0062', name: 'Epson Projector EB-S41' },
-  { tag: 'AF-0031', name: 'Herman Miller Aeron Chair' },
-  { tag: 'AF-0011', name: 'Boardroom Table — 12 Seat' },
-  { tag: 'AF-0130', name: 'Cisco IP Phone 8841' },
-  { tag: 'AF-0022', name: 'LG 32" Monitor 4K' },
-]
-
-const allocStatusBadge = { Active: 'badge-success', Overdue: 'badge-error', Returned: 'badge-inactive' }
-const transferStatusBadge = { Pending: 'badge-warning', Approved: 'badge-success', Reallocated: 'badge-info', Rejected: 'badge-error' }
-const transferStatusIcon  = { Pending: 'schedule', Approved: 'check_circle', Reallocated: 'swap_horiz', Rejected: 'cancel' }
+/* ─── Constants ─────────────────────────────── */
+const allocStatusBadge = { ACTIVE: 'badge-success', OVERDUE: 'badge-error', RETURNED: 'badge-inactive', Active: 'badge-success', Overdue: 'badge-error', Returned: 'badge-inactive' }
+const transferStatusBadge = { PENDING: 'badge-warning', APPROVED: 'badge-success', COMPLETED: 'badge-info', REJECTED: 'badge-error', Pending: 'badge-warning', Approved: 'badge-success', Reallocated: 'badge-info', Rejected: 'badge-error' }
+const transferStatusIcon  = { PENDING: 'schedule', APPROVED: 'check_circle', COMPLETED: 'swap_horiz', REJECTED: 'cancel', Pending: 'schedule', Approved: 'check_circle', Reallocated: 'swap_horiz', Rejected: 'cancel' }
 
 function initials(name) {
   return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : ''
@@ -38,14 +17,19 @@ function initials(name) {
 
 const AVATAR_COLORS = ['blue', 'teal', 'purple', 'orange', 'rose']
 const randomColor = () => AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
+const getColor = (id) => AVATAR_COLORS[(id || 0) % AVATAR_COLORS.length]
 
-const emptyAllocForm    = { assetTag: '', assetName: '', employee: '', dept: '', expectedReturn: '', conditionNotes: '' }
-const emptyTransferForm = { assetTag: '', assetName: '', from: '', to: '', reason: '' }
+const emptyAllocForm    = { assetId: '', employeeId: '', expectedReturn: '', conditionNotes: '' }
+const emptyTransferForm = { allocationId: '', toEmployeeId: '', reason: '' }
 
 export default function AllocationPage() {
   const [activeTab, setActiveTab] = useState('allocations')
-  const [allocations, setAllocations]   = useState(seedAllocations)
-  const [transfers, setTransfers]       = useState(seedTransfers)
+  const [allocations, setAllocations]   = useState([])
+  const [transfers, setTransfers]       = useState([])
+  const [assets, setAssets]             = useState([])
+  const [employees, setEmployees]       = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [error, setError]               = useState(null)
   const [search, setSearch]             = useState('')
   const [filterStatus, setFilterStatus] = useState('')
 
@@ -53,71 +37,128 @@ export default function AllocationPage() {
   const [showAllocModal, setShowAllocModal] = useState(false)
   const [allocForm, setAllocForm]           = useState(emptyAllocForm)
   const [allocError, setAllocError]         = useState('')
+  const [saving, setSaving]                 = useState(false)
 
   /* Transfer modal */
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [transferForm, setTransferForm]           = useState(emptyTransferForm)
   const [transferError, setTransferError]         = useState('')
 
+  /* ── Fetch Data ── */
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [allocRes, assetRes, empRes] = await Promise.all([
+        allocationService.getAll(),
+        assetService.getAll(),
+        employeeService.getAll(),
+      ])
+      setAllocations(allocRes.data || allocRes || [])
+      setAssets(assetRes.data || assetRes || [])
+      setEmployees(empRes.data || empRes || [])
+    } catch (err) {
+      console.error('Failed to load allocation data:', err)
+      setError(err.response?.data?.message || 'Failed to load data')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
   /* ── Filter Data ── */
   const filteredAlloc = allocations.filter(a => {
     const q = search.toLowerCase()
-    const matchSearch = !q || a.asset.toLowerCase().includes(q) || a.tag.toLowerCase().includes(q) || a.employee.toLowerCase().includes(q)
+    const assetName = a.assetName || a.asset || ''
+    const empName = a.employeeName || a.employee || ''
+    const tag = a.assetTag || a.tag || ''
+    const matchSearch = !q || assetName.toLowerCase().includes(q) || tag.toLowerCase().includes(q) || empName.toLowerCase().includes(q)
     const matchStatus = !filterStatus || a.status === filterStatus
     return matchSearch && matchStatus
   })
 
   const filteredTransfers = transfers.filter(t => {
     const q = search.toLowerCase()
-    const matchSearch = !q || t.asset.toLowerCase().includes(q) || t.tag.toLowerCase().includes(q) || t.from.toLowerCase().includes(q) || t.to.toLowerCase().includes(q)
+    const assetName = t.assetName || t.asset || ''
+    const tag = t.assetTag || t.tag || ''
+    const fromName = t.fromEmployeeName || t.from || ''
+    const toName = t.toEmployeeName || t.to || ''
+    const matchSearch = !q || assetName.toLowerCase().includes(q) || tag.toLowerCase().includes(q) || fromName.toLowerCase().includes(q) || toName.toLowerCase().includes(q)
     const matchStatus = !filterStatus || t.status === filterStatus
     return matchSearch && matchStatus
   })
 
   /* ── Save Allocation ── */
-  const handleSaveAlloc = () => {
-    if (!allocForm.assetTag || !allocForm.employee || !allocForm.expectedReturn) {
+  const handleSaveAlloc = async () => {
+    if (!allocForm.assetId || !allocForm.employeeId || !allocForm.expectedReturn) {
       setAllocError('Asset, employee, and return date are required.')
       return
     }
-    const color = randomColor()
-    setAllocations(prev => [...prev, {
-      id: Date.now(), asset: allocForm.assetName, tag: allocForm.assetTag,
-      employee: allocForm.employee, dept: allocForm.dept || 'N/A',
-      allocated: new Date().toISOString().slice(0, 10),
-      expectedReturn: allocForm.expectedReturn,
-      status: 'Active', conditionNotes: allocForm.conditionNotes,
-      initials: initials(allocForm.employee), color,
-    }])
-    setAllocForm(emptyAllocForm); setAllocError(''); setShowAllocModal(false)
+    setSaving(true)
+    try {
+      await allocationService.allocate({
+        assetId: Number(allocForm.assetId),
+        employeeId: Number(allocForm.employeeId),
+        expectedReturnDate: allocForm.expectedReturn,
+        conditionNotes: allocForm.conditionNotes,
+      })
+      setAllocForm(emptyAllocForm); setAllocError(''); setShowAllocModal(false)
+      await fetchData()
+    } catch (err) {
+      setAllocError(err.response?.data?.message || 'Failed to allocate asset')
+    } finally {
+      setSaving(false)
+    }
   }
 
   /* ── Save Transfer ── */
-  const handleSaveTransfer = () => {
-    if (!transferForm.assetTag || !transferForm.from || !transferForm.to || !transferForm.reason.trim()) {
+  const handleSaveTransfer = async () => {
+    if (!transferForm.allocationId || !transferForm.toEmployeeId || !transferForm.reason.trim()) {
       setTransferError('All fields are required.')
       return
     }
-    if (transferForm.from === transferForm.to) {
-      setTransferError('From and To employee must be different.')
-      return
+    setSaving(true)
+    try {
+      await allocationService.transfer(transferForm.allocationId, {
+        toEmployeeId: Number(transferForm.toEmployeeId),
+        reason: transferForm.reason,
+      })
+      setTransferForm(emptyTransferForm); setTransferError(''); setShowTransferModal(false)
+      await fetchData()
+    } catch (err) {
+      setTransferError(err.response?.data?.message || 'Failed to submit transfer')
+    } finally {
+      setSaving(false)
     }
-    setTransfers(prev => [...prev, {
-      id: Date.now(), asset: transferForm.assetName, tag: transferForm.assetTag,
-      from: transferForm.from, to: transferForm.to, reason: transferForm.reason,
-      status: 'Pending', date: new Date().toISOString().slice(0, 10),
-    }])
-    setTransferForm(emptyTransferForm); setTransferError(''); setShowTransferModal(false)
   }
 
-  /* ── Approve / Reject Transfer ── */
-  const handleTransferAction = (id, action) => {
-    const nextStatus = action === 'approve' ? 'Approved' : 'Rejected'
-    setTransfers(prev => prev.map(t => t.id === id ? { ...t, status: nextStatus } : t))
+  /* ── Return Asset ── */
+  const handleReturn = async (id) => {
+    try {
+      await allocationService.returnAsset(id, 'GOOD', 'Returned by user')
+      await fetchData()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to return asset')
+    }
   }
 
-  const allocationStatuses = ['Active', 'Overdue', 'Returned']
-  const transferStatuses   = ['Pending', 'Approved', 'Reallocated', 'Rejected']
+  /* ── Transfer Action (Approve/Reject) ── */
+  const handleTransferAction = async (id, action) => {
+    try {
+      if (action === 'approve') {
+        await allocationService.transfer(id, { approved: true })
+      } else {
+        await allocationService.transfer(id, { approved: false })
+      }
+      await fetchData()
+    } catch (err) {
+      alert(err.response?.data?.message || `Failed to ${action} transfer`)
+    }
+  }
+
+  const allocationStatuses = ['ACTIVE', 'OVERDUE', 'RETURNED', 'Active', 'Overdue', 'Returned']
+  const transferStatuses   = ['PENDING', 'APPROVED', 'COMPLETED', 'REJECTED', 'Pending', 'Approved', 'Reallocated', 'Rejected']
 
   return (
     <div className="allocation-page">
@@ -187,41 +228,50 @@ export default function AllocationPage() {
             <tbody>
               {filteredAlloc.length === 0 ? (
                 <tr><td colSpan={8}><div className="empty-state"><span className="material-symbols-outlined">assignment_ind</span><p>No allocations found.</p></div></td></tr>
-              ) : filteredAlloc.map(alloc => (
+              ) : filteredAlloc.map(alloc => {
+                const empName = alloc.employeeName || alloc.employee || ''
+                const assetName = alloc.assetName || alloc.asset || ''
+                const tag = alloc.assetTag || alloc.tag || ''
+                const dept = alloc.departmentName || alloc.dept || ''
+                const allocDate = alloc.allocationDate || alloc.allocated || ''
+                const retDate = alloc.expectedReturnDate || alloc.expectedReturn || ''
+                const isOverdue = alloc.status === 'Overdue' || alloc.status === 'OVERDUE'
+                const isActive = alloc.status === 'Active' || alloc.status === 'ACTIVE'
+                return (
                 <tr key={alloc.id}>
                   <td>
                     <div>
-                      <code className="asset-tag">{alloc.tag}</code>
-                      <div style={{ fontWeight: 500, marginTop: 4, fontSize: 13 }}>{alloc.asset}</div>
+                      <code className="asset-tag">{tag}</code>
+                      <div style={{ fontWeight: 500, marginTop: 4, fontSize: 13 }}>{assetName}</div>
                     </div>
                   </td>
                   <td>
                     <div className="cell-with-avatar">
-                      <div className={`avatar avatar-${alloc.color}`}>{alloc.initials}</div>
+                      <div className={`avatar avatar-${getColor(alloc.id)}`}>{initials(empName)}</div>
                       <div>
-                        <div className="name">{alloc.employee}</div>
-                        <div className="sub">{alloc.dept}</div>
+                        <div className="name">{empName}</div>
+                        <div className="sub">{dept}</div>
                       </div>
                     </div>
                   </td>
-                  <td>{alloc.dept}</td>
-                  <td>{alloc.allocated}</td>
+                  <td>{dept}</td>
+                  <td>{allocDate}</td>
                   <td>
-                    <span style={{ color: alloc.status === 'Overdue' ? 'var(--error)' : 'inherit', fontWeight: alloc.status === 'Overdue' ? 600 : 400 }}>
-                      {alloc.expectedReturn}
-                      {alloc.status === 'Overdue' && <span className="overdue-flag"> ⚠ Overdue</span>}
+                    <span style={{ color: isOverdue ? 'var(--error)' : 'inherit', fontWeight: isOverdue ? 600 : 400 }}>
+                      {retDate}
+                      {isOverdue && <span className="overdue-flag"> ⚠ Overdue</span>}
                     </span>
                   </td>
-                  <td><span className={`badge ${allocStatusBadge[alloc.status]}`}>{alloc.status}</span></td>
+                  <td><span className={`badge ${allocStatusBadge[alloc.status] || 'badge-inactive'}`}>{alloc.status}</span></td>
                   <td><span style={{ fontSize: 13, color: 'var(--on-surface-variant)' }}>{alloc.conditionNotes || '—'}</span></td>
                   <td>
                     <div className="row-actions">
-                      {alloc.status === 'Active' && (
+                      {isActive && (
                         <>
-                          <button className="btn btn-secondary btn-sm" onClick={() => setTransfers(prev => [...prev, { id: Date.now(), asset: alloc.asset, tag: alloc.tag, from: alloc.employee, to: '', reason: '', status: 'Pending', date: new Date().toISOString().slice(0, 10) }])}>
+                          <button className="btn btn-secondary btn-sm" title="Transfer" onClick={() => { setTransferForm({ allocationId: alloc.id, toEmployeeId: '', reason: '' }); setTransferError(''); setShowTransferModal(true) }}>
                             <span className="material-symbols-outlined">swap_horiz</span>
                           </button>
-                          <button className="btn btn-ghost btn-sm">
+                          <button className="btn btn-ghost btn-sm" title="Return" onClick={() => handleReturn(alloc.id)}>
                             <span className="material-symbols-outlined">assignment_return</span>
                           </button>
                         </>
@@ -229,7 +279,7 @@ export default function AllocationPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           {filteredAlloc.length > 0 && (
@@ -309,35 +359,32 @@ export default function AllocationPage() {
 
       {/* ── Allocate Asset Modal ── */}
       {showAllocModal && (
-        <Modal onClose={() => setShowAllocModal(false)}>
-          <div className="modal-header">
-            <h2>Allocate Asset</h2>
-            <button className="modal-close" onClick={() => setShowAllocModal(false)}><span className="material-symbols-outlined">close</span></button>
-          </div>
-          <div className="modal-body">
+        <Modal
+          title="Allocate Asset"
+          onClose={() => setShowAllocModal(false)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowAllocModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveAlloc} disabled={saving}>
+                <span className="material-symbols-outlined">assignment_ind</span> {saving ? 'Allocating…' : 'Allocate'}
+              </button>
+            </>
+          }
+        >
             {allocError && <div className="form-error-msg"><span className="material-symbols-outlined">error</span>{allocError}</div>}
             <div className="form-field">
               <label>Asset <span className="required">*</span></label>
-              <select className="form-input form-select" value={allocForm.assetTag} onChange={e => {
-                const a = ASSETS_AVAILABLE.find(x => x.tag === e.target.value)
-                setAllocForm(f => ({ ...f, assetTag: e.target.value, assetName: a?.name || '' }))
-              }}>
+              <select className="form-input form-select" value={allocForm.assetId} onChange={e => setAllocForm(f => ({ ...f, assetId: e.target.value }))}>
                 <option value="">Select available asset…</option>
-                {ASSETS_AVAILABLE.map(a => <option key={a.tag} value={a.tag}>{a.tag} — {a.name}</option>)}
+                {assets.filter(a => a.status === 'AVAILABLE').map(a => <option key={a.id} value={a.id}>{a.assetTag || a.id} — {a.name}</option>)}
               </select>
             </div>
-            <div className="form-grid-2">
-              <div className="form-field">
-                <label>Assign To <span className="required">*</span></label>
-                <select className="form-input form-select" value={allocForm.employee} onChange={e => setAllocForm(f => ({ ...f, employee: e.target.value }))}>
-                  <option value="">Select employee…</option>
-                  {EMPLOYEES.map(emp => <option key={emp}>{emp}</option>)}
-                </select>
-              </div>
-              <div className="form-field">
-                <label>Department</label>
-                <input className="form-input" placeholder="e.g. Engineering" value={allocForm.dept} onChange={e => setAllocForm(f => ({ ...f, dept: e.target.value }))} />
-              </div>
+            <div className="form-field">
+              <label>Assign To <span className="required">*</span></label>
+              <select className="form-input form-select" value={allocForm.employeeId} onChange={e => setAllocForm(f => ({ ...f, employeeId: e.target.value }))}>
+                <option value="">Select employee…</option>
+                {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+              </select>
             </div>
             <div className="form-field">
               <label>Expected Return Date <span className="required">*</span></label>
@@ -347,50 +394,37 @@ export default function AllocationPage() {
               <label>Condition Notes</label>
               <textarea className="form-input" style={{ height: 72, resize: 'vertical', paddingTop: 8 }} placeholder="Describe the asset condition at time of allocation…" value={allocForm.conditionNotes} onChange={e => setAllocForm(f => ({ ...f, conditionNotes: e.target.value }))} />
             </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setShowAllocModal(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSaveAlloc}>
-              <span className="material-symbols-outlined">assignment_ind</span> Allocate
-            </button>
-          </div>
         </Modal>
       )}
 
       {/* ── Request Transfer Modal ── */}
       {showTransferModal && (
-        <Modal onClose={() => setShowTransferModal(false)}>
-          <div className="modal-header">
-            <h2>Request Asset Transfer</h2>
-            <button className="modal-close" onClick={() => setShowTransferModal(false)}><span className="material-symbols-outlined">close</span></button>
-          </div>
-          <div className="modal-body">
+        <Modal
+          title="Request Asset Transfer"
+          onClose={() => setShowTransferModal(false)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setShowTransferModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveTransfer} disabled={saving}>
+                <span className="material-symbols-outlined">swap_horiz</span> {saving ? 'Submitting…' : 'Submit Request'}
+              </button>
+            </>
+          }
+        >
             {transferError && <div className="form-error-msg"><span className="material-symbols-outlined">error</span>{transferError}</div>}
             <div className="form-field">
-              <label>Asset <span className="required">*</span></label>
-              <select className="form-input form-select" value={transferForm.assetTag} onChange={e => {
-                const a = ASSETS_AVAILABLE.find(x => x.tag === e.target.value)
-                setTransferForm(f => ({ ...f, assetTag: e.target.value, assetName: a?.name || '' }))
-              }}>
-                <option value="">Select asset…</option>
-                {ASSETS_AVAILABLE.map(a => <option key={a.tag} value={a.tag}>{a.tag} — {a.name}</option>)}
+              <label>Transfer Allocation <span className="required">*</span></label>
+              <select className="form-input form-select" value={transferForm.allocationId} onChange={e => setTransferForm(f => ({ ...f, allocationId: e.target.value }))}>
+                <option value="">Select active allocation…</option>
+                {allocations.filter(a => a.status === 'ACTIVE' || a.status === 'Active').map(a => <option key={a.id} value={a.id}>{a.assetTag || a.tag} — {a.assetName || a.asset} (→ {a.employeeName || a.employee})</option>)}
               </select>
             </div>
-            <div className="form-grid-2">
-              <div className="form-field">
-                <label>Transfer From <span className="required">*</span></label>
-                <select className="form-input form-select" value={transferForm.from} onChange={e => setTransferForm(f => ({ ...f, from: e.target.value }))}>
-                  <option value="">Select employee…</option>
-                  {EMPLOYEES.map(emp => <option key={emp}>{emp}</option>)}
-                </select>
-              </div>
-              <div className="form-field">
-                <label>Transfer To <span className="required">*</span></label>
-                <select className="form-input form-select" value={transferForm.to} onChange={e => setTransferForm(f => ({ ...f, to: e.target.value }))}>
-                  <option value="">Select employee…</option>
-                  {EMPLOYEES.filter(e => e !== transferForm.from).map(emp => <option key={emp}>{emp}</option>)}
-                </select>
-              </div>
+            <div className="form-field">
+              <label>Transfer To <span className="required">*</span></label>
+              <select className="form-input form-select" value={transferForm.toEmployeeId} onChange={e => setTransferForm(f => ({ ...f, toEmployeeId: e.target.value }))}>
+                <option value="">Select employee…</option>
+                {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+              </select>
             </div>
             <div className="form-field">
               <label>Reason for Transfer <span className="required">*</span></label>
@@ -400,13 +434,6 @@ export default function AllocationPage() {
               <span className="material-symbols-outlined icon-filled">info</span>
               Transfer requests go to the Asset Manager for approval before taking effect.
             </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={() => setShowTransferModal(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSaveTransfer}>
-              <span className="material-symbols-outlined">swap_horiz</span> Submit Request
-            </button>
-          </div>
         </Modal>
       )}
     </div>
