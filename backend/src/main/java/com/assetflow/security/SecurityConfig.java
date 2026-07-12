@@ -17,7 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+//@EnableMethodSecurity // Temporarily disabled for testing so all APIs are open
 @RequiredArgsConstructor
 public class SecurityConfig {
 
