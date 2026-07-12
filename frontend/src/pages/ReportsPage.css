@@ -1,0 +1,372 @@
+/* ==============================
+   ReportsPage Styles
+   ============================== */
+
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.reports-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ── KPI Grid ── */
+.reports-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+}
+
+.report-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md);
+  transition: box-shadow 0.15s;
+}
+
+.report-kpi-card:hover { box-shadow: var(--shadow-hover); }
+
+.report-kpi-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.report-kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1;
+}
+
+.report-kpi-label {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+/* ── Two-col layout ── */
+.reports-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+/* ── Report Card ── */
+.report-card {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.report-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--outline-variant);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-surface);
+  background: var(--surface-container-low);
+}
+
+/* ── Donut Chart ── */
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.donut-svg {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.donut-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.donut-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.donut-legend-label {
+  flex: 1;
+  color: var(--on-surface-variant);
+}
+
+.donut-legend-value {
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+/* ── Report List ── */
+.report-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--space-md);
+  border-bottom: 1px solid var(--surface-container);
+  gap: var(--space-sm);
+}
+
+.report-list-item:last-child { border-bottom: none; }
+
+/* ── Idle Badge ── */
+.idle-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warning);
+  background: var(--warning-container);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* ── Utilization Chart ── */
+.util-legend {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-xs) var(--space-md);
+  font-size: 12px;
+}
+
+.util-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+}
+
+.util-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.util-dot.allocated   { background: var(--primary); }
+.util-dot.maintenance { background: var(--warning); }
+.util-dot.available   { background: var(--success); }
+
+.util-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.util-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.util-category {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--on-surface);
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.util-bar-track {
+  flex: 1;
+  height: 16px;
+  background: var(--surface-container);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  display: flex;
+}
+
+.util-seg { height: 100%; transition: width 0.4s ease; }
+.util-allocated   { background: var(--primary); }
+.util-maintenance { background: var(--warning); }
+.util-available   { background: var(--success); }
+
+.util-numbers {
+  display: flex;
+  gap: var(--space-xs);
+  font-size: 11px;
+  width: 200px;
+  flex-shrink: 0;
+}
+
+.util-num { font-weight: 600; }
+.util-num.allocated   { color: var(--primary); }
+.util-num.maintenance { color: var(--warning); }
+.util-num.available   { color: var(--success); }
+
+/* ── Rank Badge ── */
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--primary-fixed);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Booking Count Badge ── */
+.booking-count-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-fixed);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* ── Maintenance Frequency ── */
+.maint-freq-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--space-md);
+  border-bottom: 1px solid var(--surface-container);
+  gap: var(--space-sm);
+}
+
+.maint-freq-item:last-child { border-bottom: none; }
+
+.maint-freq-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.maint-freq-bar-wrap {
+  width: 100px;
+  height: 8px;
+  background: var(--surface-container);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.maint-freq-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #d97706, #f59e0b);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.maint-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--warning);
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ── Booking Bar Chart ── */
+.booking-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  height: 200px;
+}
+
+.booking-chart-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  height: 100%;
+}
+
+.booking-chart-bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--primary-container), var(--primary));
+  border-radius: var(--radius-default) var(--radius-default) 0 0;
+  min-height: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  transition: height 0.4s ease;
+  position: relative;
+}
+
+.booking-chart-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  position: absolute;
+  top: 4px;
+}
+
+.booking-chart-month {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+}
+
+.booking-chart-legend {
+  padding: 10px var(--space-md);
+  border-top: 1px solid var(--outline-variant);
+}
+
+/* ── Misc ── */
+.asset-tag-sm {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  background: var(--primary-fixed);
+  padding: 2px 6px;
+  border-radius: var(--radius-default);
+}
+
+.table-footer {
+  padding: 10px var(--space-md);
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  border-top: 1px solid var(--outline-variant);
+  background: var(--surface-container-low);
+}
