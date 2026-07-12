@@ -60,6 +60,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 employee.setGoogleId(googleId);
                 updated = true;
             }
+            // Auto-promote to ADMIN if they match the admin email
+            if (email != null && email.equals(appProperties.getOauth2().getAdminEmail()) && employee.getRole() != Role.ADMIN) {
+                employee.setRole(Role.ADMIN);
+                updated = true;
+                log.info("Upgraded existing employee to ADMIN role: {}", email);
+            }
+            
             if (updated) {
                 employee = employeeRepository.save(employee);
                 log.info("Updated existing employee: {}", email);
@@ -69,7 +76,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             Role role = Role.EMPLOYEE;
             if (email != null && email.equals(appProperties.getOauth2().getAdminEmail())) {
                 role = Role.ADMIN;
-                log.info("Assigning ADMIN role to: {}", email);
+                log.info("Assigning ADMIN role to new user: {}", email);
             }
 
             employee = Employee.builder()

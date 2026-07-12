@@ -8,7 +8,7 @@ import com.assetflow.allocation.entity.AssetAllocation;
 import com.assetflow.allocation.mapper.AllocationMapper;
 import com.assetflow.allocation.repository.AllocationRepository;
 import com.assetflow.asset.entity.Asset;
-import com.assetflow.asset.entity.AssetStatus;
+import com.assetflow.common.enums.AssetStatus;
 import com.assetflow.asset.repository.AssetRepository;
 import com.assetflow.common.exception.ConflictException;
 import com.assetflow.common.exception.ResourceNotFoundException;

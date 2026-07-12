@@ -1,0 +1,121 @@
+/* ==============================
+   AllocationPage Styles
+   ============================== */
+
+.allocation-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  max-width: 1400px;
+}
+
+/* ── Asset Tag (shared) ── */
+.asset-tag {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  background: var(--primary-fixed);
+  padding: 2px 8px;
+  border-radius: var(--radius-default);
+}
+
+/* ── Tab Counts ── */
+.tab-count {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--error);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── Overdue Flag ── */
+.overdue-flag {
+  display: block;
+  font-size: 11px;
+  color: var(--error);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ── Transfer Person Cell ── */
+.transfer-person {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ── Conflict Notice ── */
+.conflict-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px var(--space-sm);
+  border-radius: var(--radius-default);
+  background: var(--primary-fixed);
+  color: var(--primary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.conflict-notice .material-symbols-outlined {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Table Footer ── */
+.table-footer {
+  padding: 10px var(--space-md);
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  border-top: 1px solid var(--outline-variant);
+  background: var(--surface-container-low);
+}
+
+/* ── Form Error ── */
+.form-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--error);
+  background: var(--error-container);
+  padding: 8px var(--space-sm);
+  border-radius: var(--radius-default);
+}
+
+.form-error-msg .material-symbols-outlined {
+  font-size: 17px;
+}
+
+/* ── Toolbar ── */
+.assets-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  height: 38px;
+  min-width: 150px;
+  font-size: 13px;
+}

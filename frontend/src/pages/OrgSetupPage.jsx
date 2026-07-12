@@ -61,7 +61,7 @@ function DepartmentsTab() {
     setError(null)
     try {
       const res = await departmentService.getAll()
-      setDepartments(res.data || [])
+      setDepartments(res.data || res || [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load departments')
     } finally {
@@ -258,7 +258,7 @@ function CategoriesTab() {
     setError(null)
     try {
       const res = await categoryService.getAll()
-      setCategories(res.data || [])
+      setCategories(res.data || res || [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load categories')
     } finally {
@@ -412,7 +412,7 @@ function EmployeeDirectoryTab() {
     setError(null)
     try {
       const res = await employeeService.getAll()
-      setEmployees(res.data || [])
+      setEmployees(res.data || res || [])
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load employees')
     } finally {

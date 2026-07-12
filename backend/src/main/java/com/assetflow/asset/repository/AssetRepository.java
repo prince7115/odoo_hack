@@ -11,4 +11,6 @@ public interface AssetRepository extends JpaRepository<Asset, Long>, JpaSpecific
     boolean existsByAssetTag(String assetTag);
     boolean existsBySerialNumber(String serialNumber);
     long countByStatus(AssetStatus status);
+    boolean existsByCategoryId(Long categoryId);
+    boolean existsByDepartmentId(Long departmentId);
 }

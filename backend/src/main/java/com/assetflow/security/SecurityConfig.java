@@ -43,7 +43,6 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/auth/**",
-                                "/api/**",   // TODO: REMOVE before production — temporary dev bypass
                                 "/"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -66,7 +65,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(appProperties.getCors().getAllowedOrigins());
+        configuration.setAllowedOriginPatterns(java.util.List.of("*"));
         configuration.setAllowedMethods(appProperties.getCors().getAllowedMethods());
         configuration.setAllowedHeaders(appProperties.getCors().getAllowedHeaders());
         configuration.setAllowCredentials(appProperties.getCors().isAllowCredentials());
