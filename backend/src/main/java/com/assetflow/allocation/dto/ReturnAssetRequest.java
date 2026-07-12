@@ -1,6 +1,6 @@
 package com.assetflow.allocation.dto;
 
-import com.assetflow.asset.entity.AssetCondition;
+import com.assetflow.common.enums.AssetCondition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
