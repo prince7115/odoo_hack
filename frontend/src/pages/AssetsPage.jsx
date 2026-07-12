@@ -13,6 +13,7 @@ const statusBadge = { AVAILABLE: 'badge-success', ALLOCATED: 'badge-info', UNDER
 const conditionBadge = { NEW: 'badge-success', GOOD: 'badge-success', FAIR: 'badge-info', POOR: 'badge-warning', DAMAGED: 'badge-error' }
 
 const AVATAR_COLORS = ['blue', 'teal', 'purple', 'orange', 'rose']
+const LOCATIONS = ['Head Office - IT Store', 'Branch A - Server Room', 'Warehouse 1', 'Remote', 'Work from Home']
 
 function initials(name) {
   return name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : ''
@@ -233,7 +234,7 @@ export default function AssetsPage() {
         <div className="assets-filters">
           <select className="filter-select form-input form-select" value={filterCat} onChange={e => setFilterCat(e.target.value)}>
             <option value="">All Categories</option>
-            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select className="filter-select form-input form-select" value={filterCond} onChange={e => setFilterCond(e.target.value)}>
             <option value="">All Conditions</option>
