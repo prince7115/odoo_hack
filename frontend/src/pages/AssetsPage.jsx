@@ -1,31 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../components/Modal'
 import '../components/shared.css'
 import './AssetsPage.css'
+import assetService from '../services/assetService'
+import categoryService from '../services/categoryService'
+import departmentService from '../services/departmentService'
 
-/* ─── Seed Data ─────────────────────────────── */
-const seedAssets = [
-  { id: 1,  tag: 'AF-0114', name: 'Dell Laptop XPS 15',         category: 'Electronics',  serial: 'DL-XPS-2291',   location: 'IT Dept',        condition: 'Good',       status: 'Allocated',    bookable: false, cost: 85000, acquired: '2023-04-10', assignee: 'Priya Shah',   initials: 'PS', color: 'rose' },
-  { id: 2,  tag: 'AF-0062', name: 'Epson Projector EB-S41',     category: 'Electronics',  serial: 'EP-S41-0882',   location: 'Conference B',   condition: 'Good',       status: 'Available',    bookable: true,  cost: 32000, acquired: '2022-11-05', assignee: null,           initials: '', color: '' },
-  { id: 3,  tag: 'AF-0031', name: 'Herman Miller Aeron Chair',  category: 'Furniture',    serial: 'HM-AC-1134',    location: 'Engineering',    condition: 'Excellent',  status: 'Available',    bookable: false, cost: 42000, acquired: '2023-01-20', assignee: null,           initials: '', color: '' },
-  { id: 4,  tag: 'AF-0078', name: 'Toyota Innova (MH-12-AB-9021)',category:'Vehicles',   serial: 'VH-INN-0078',   location: 'Parking Lot A',  condition: 'Good',       status: 'Allocated',    bookable: true,  cost: 1850000, acquired: '2021-08-15', assignee: 'Rohan Mehta', initials: 'RM', color: 'teal' },
-  { id: 5,  tag: 'AF-0093', name: 'Oscilloscope Rigol DS1054Z', category: 'Lab Equipment',serial: 'RG-DS10-0093',  location: 'Lab Room 2',     condition: 'Fair',       status: 'Maintenance',  bookable: false, cost: 28000, acquired: '2020-06-01', assignee: null,           initials: '', color: '' },
-  { id: 6,  tag: 'AF-0105', name: 'iPhone 14 Pro (Company)',    category: 'Electronics',  serial: 'AP-I14P-0105',  location: 'HR Dept',        condition: 'Good',       status: 'Allocated',    bookable: false, cost: 120000, acquired: '2023-09-20', assignee: 'Aditi Rao',   initials: 'AR', color: 'blue' },
-  { id: 7,  tag: 'AF-0011', name: 'Boardroom Table — 12 Seat',  category: 'Furniture',    serial: 'FN-BT-0011',    location: 'Boardroom',      condition: 'Excellent',  status: 'Available',    bookable: true,  cost: 95000, acquired: '2019-03-14', assignee: null,           initials: '', color: '' },
-  { id: 8,  tag: 'AF-0130', name: 'Cisco IP Phone 8841',        category: 'Electronics',  serial: 'CS-8841-0130',  location: 'Reception',      condition: 'Good',       status: 'Available',    bookable: false, cost: 18000, acquired: '2022-05-22', assignee: null,           initials: '', color: '' },
-  { id: 9,  tag: 'AF-0055', name: 'Forklift Komatsu FG25T',     category: 'Vehicles',     serial: 'KM-FG25-0055',  location: 'Warehouse',      condition: 'Fair',       status: 'Maintenance',  bookable: false, cost: 450000, acquired: '2018-10-05', assignee: null,           initials: '', color: '' },
-  { id: 10, tag: 'AF-0088', name: 'Spectrum Analyzer R&S',      category: 'Lab Equipment',serial: 'RS-SA-0088',    location: 'Lab Room 1',     condition: 'Good',       status: 'Allocated',    bookable: false, cost: 380000, acquired: '2021-12-01', assignee: 'Arjun Nair',  initials: 'AN', color: 'orange' },
-  { id: 11, tag: 'AF-0022', name: 'LG 32" Monitor 4K',          category: 'Electronics',  serial: 'LG-32M-0022',   location: 'Design Studio',  condition: 'Excellent',  status: 'Available',    bookable: false, cost: 45000, acquired: '2023-07-18', assignee: null,           initials: '', color: '' },
-  { id: 12, tag: 'AF-0007', name: 'Canon DSLR EOS 90D',         category: 'Electronics',  serial: 'CN-90D-0007',   location: 'Storage Room',   condition: 'Good',       status: 'Retired',      bookable: false, cost: 95000, acquired: '2017-02-10', assignee: null,           initials: '', color: '' },
-]
+const CONDITIONS = ['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED']
+const STATUSES   = ['AVAILABLE', 'ALLOCATED', 'UNDER_MAINTENANCE', 'DISPOSED']
 
-const CATEGORIES = ['Electronics', 'Furniture', 'Vehicles', 'Lab Equipment']
-const CONDITIONS = ['Excellent', 'Good', 'Fair', 'Poor']
-const STATUSES   = ['Available', 'Allocated', 'Maintenance', 'Retired']
-const LOCATIONS  = ['IT Dept', 'Conference B', 'Engineering', 'Parking Lot A', 'Lab Room 1', 'Lab Room 2', 'HR Dept', 'Boardroom', 'Reception', 'Warehouse', 'Design Studio', 'Storage Room']
-
-const statusBadge = { Available: 'badge-success', Allocated: 'badge-info', Maintenance: 'badge-warning', Retired: 'badge-inactive' }
-const conditionBadge = { Excellent: 'badge-success', Good: 'badge-info', Fair: 'badge-warning', Poor: 'badge-error' }
+const statusBadge = { AVAILABLE: 'badge-success', ALLOCATED: 'badge-info', UNDER_MAINTENANCE: 'badge-warning', DISPOSED: 'badge-inactive' }
+const conditionBadge = { NEW: 'badge-success', GOOD: 'badge-success', FAIR: 'badge-info', POOR: 'badge-warning', DAMAGED: 'badge-error' }
 
 const AVATAR_COLORS = ['blue', 'teal', 'purple', 'orange', 'rose']
 
@@ -34,8 +19,8 @@ function initials(name) {
 }
 
 const emptyForm = {
-  name: '', category: '', serial: '', location: '', condition: 'Good',
-  status: 'Available', bookable: false, cost: '', acquired: ''
+  name: '', description: '', categoryId: '', departmentId: '', serialNumber: '', location: '', 
+  status: 'AVAILABLE', condition: 'NEW', purchaseCost: '', purchaseDate: ''
 }
 
 /* ─── Detail Drawer ─────────────────────────── */
@@ -64,11 +49,11 @@ function AssetDrawer({ asset, onClose }) {
           <div className="drawer-section">
             <p className="drawer-section-title">Asset Details</p>
             <div className="drawer-detail-grid">
-              <div className="drawer-detail-item"><span>Category</span><strong>{asset.category}</strong></div>
-              <div className="drawer-detail-item"><span>Serial No.</span><strong>{asset.serial}</strong></div>
+              <div className="drawer-detail-item"><span>Category</span><strong>{asset.categoryName}</strong></div>
+              <div className="drawer-detail-item"><span>Serial No.</span><strong>{asset.serialNumber}</strong></div>
               <div className="drawer-detail-item"><span>Location</span><strong>{asset.location}</strong></div>
-              <div className="drawer-detail-item"><span>Acquired</span><strong>{asset.acquired}</strong></div>
-              <div className="drawer-detail-item"><span>Cost</span><strong>₹{Number(asset.cost).toLocaleString('en-IN')}</strong></div>
+              <div className="drawer-detail-item"><span>Acquired</span><strong>{asset.purchaseDate}</strong></div>
+              <div className="drawer-detail-item"><span>Cost</span><strong>₹{Number(asset.purchaseCost || 0).toLocaleString('en-IN')}</strong></div>
             </div>
           </div>
 
@@ -110,42 +95,81 @@ function AssetDrawer({ asset, onClose }) {
 
 /* ─── Main Page ─────────────────────────────── */
 export default function AssetsPage() {
-  const [assets, setAssets]           = useState(seedAssets)
+  const [assets, setAssets]           = useState([])
+  const [categories, setCategories]   = useState([])
+  const [departments, setDepartments] = useState([])
+  const [loading, setLoading]         = useState(true)
+
   const [search, setSearch]           = useState('')
   const [filterCat, setFilterCat]     = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterCond, setFilterCond]   = useState('')
+  
   const [showModal, setShowModal]     = useState(false)
   const [form, setForm]               = useState(emptyForm)
   const [formError, setFormError]     = useState('')
   const [selectedAsset, setSelectedAsset] = useState(null)
 
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [assetsRes, catsRes, deptsRes] = await Promise.all([
+        assetService.getAll(),
+        categoryService.getAll(),
+        departmentService.getAll()
+      ])
+      setAssets(assetsRes.data || [])
+      setCategories(catsRes.data || [])
+      setDepartments(deptsRes.data || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   /* Filtering */
   const filtered = assets.filter(a => {
     const q = search.toLowerCase()
-    const matchSearch = !q || a.name.toLowerCase().includes(q) || a.tag.toLowerCase().includes(q) || a.serial.toLowerCase().includes(q) || a.location.toLowerCase().includes(q)
-    const matchCat    = !filterCat    || a.category  === filterCat
+    const matchSearch = !q || a.name.toLowerCase().includes(q) || a.assetTag?.toLowerCase().includes(q) || a.serialNumber?.toLowerCase().includes(q) || a.location?.toLowerCase().includes(q)
+    const matchCat    = !filterCat    || String(a.categoryId) === filterCat
     const matchStatus = !filterStatus || a.status    === filterStatus
-    const matchCond   = !filterCond   || a.condition === filterCond
+    const matchCond   = !filterCond   || a.assetCondition === filterCond
     return matchSearch && matchCat && matchStatus && matchCond
   })
 
   /* KPI counts */
-  const counts = { Available: 0, Allocated: 0, Maintenance: 0, Retired: 0 }
-  assets.forEach(a => counts[a.status]++)
+  const counts = { AVAILABLE: 0, ALLOCATED: 0, UNDER_MAINTENANCE: 0, DISPOSED: 0 }
+  assets.forEach(a => { if (counts[a.status] !== undefined) counts[a.status]++ })
 
   /* Save new asset */
-  const handleSave = () => {
-    if (!form.name.trim() || !form.category || !form.serial.trim() || !form.location) {
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.categoryId || !form.serialNumber.trim() || !form.location) {
       setFormError('Please fill in all required fields.')
       return
     }
-    const newTag = `AF-${String(assets.length + 1).padStart(4, '0')}`
-    const color  = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
-    setAssets(prev => [...prev, { id: Date.now(), tag: newTag, ...form, bookable: form.bookable, cost: Number(form.cost) || 0, assignee: null, initials: '', color }])
-    setForm(emptyForm)
-    setFormError('')
-    setShowModal(false)
+    try {
+      await assetService.create({
+        name: form.name,
+        description: form.description,
+        categoryId: Number(form.categoryId),
+        departmentId: form.departmentId ? Number(form.departmentId) : null,
+        serialNumber: form.serialNumber,
+        location: form.location,
+        purchaseCost: form.purchaseCost ? Number(form.purchaseCost) : null,
+        purchaseDate: form.purchaseDate || null
+      })
+      await fetchData()
+      setForm(emptyForm)
+      setFormError('')
+      setShowModal(false)
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Failed to create asset')
+    }
   }
 
   const handleChange = (field, value) => {
@@ -252,14 +276,14 @@ export default function AssetsPage() {
               </tr>
             ) : filtered.map(asset => (
               <tr key={asset.id} className="asset-row" onClick={() => setSelectedAsset(asset)}>
-                <td><code className="asset-tag">{asset.tag}</code></td>
+                <td><code className="asset-tag">{asset.assetTag}</code></td>
                 <td>
                   <div className="asset-name-cell">
                     <span className="material-symbols-outlined asset-icon">inventory_2</span>
                     <span className="asset-name">{asset.name}</span>
                   </div>
                 </td>
-                <td><span className="category-chip">{asset.category}</span></td>
+                <td><span className="category-chip">{asset.categoryName}</span></td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span className="material-symbols-outlined" style={{ fontSize: 14, color: 'var(--outline)' }}>location_on</span>
@@ -267,7 +291,7 @@ export default function AssetsPage() {
                   </div>
                 </td>
                 <td><span className={`badge ${statusBadge[asset.status]}`}>{asset.status}</span></td>
-                <td><span className={`badge ${conditionBadge[asset.condition]}`}>{asset.condition}</span></td>
+                <td><span className={`badge ${conditionBadge[asset.assetCondition]}`}>{asset.assetCondition}</span></td>
                 <td>
                   {asset.assignee
                     ? <div className="cell-with-avatar">
@@ -282,7 +306,7 @@ export default function AssetsPage() {
                     ? <span className="material-symbols-outlined icon-filled" style={{ color: 'var(--success)', fontSize: 20 }}>check_circle</span>
                     : <span style={{ color: 'var(--outline)' }}>—</span>}
                 </td>
-                <td>₹{Number(asset.cost).toLocaleString('en-IN')}</td>
+                <td>₹{Number(asset.purchaseCost || 0).toLocaleString('en-IN')}</td>
                 <td onClick={e => e.stopPropagation()}>
                   <div className="row-actions">
                     <button className="btn btn-ghost btn-sm" title="View details" onClick={() => setSelectedAsset(asset)}>
@@ -325,9 +349,9 @@ export default function AssetsPage() {
             <div className="form-grid-2">
               <div className="form-field">
                 <label>Category <span className="required">*</span></label>
-                <select className="form-input form-select" value={form.category} onChange={e => handleChange('category', e.target.value)}>
+                <select className="form-input form-select" value={form.categoryId} onChange={e => handleChange('categoryId', e.target.value)}>
                   <option value="">Select…</option>
-                  {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="form-field">
@@ -341,7 +365,7 @@ export default function AssetsPage() {
             <div className="form-grid-2">
               <div className="form-field">
                 <label>Serial Number <span className="required">*</span></label>
-                <input className="form-input" placeholder="e.g. DL-XPS-2291" value={form.serial} onChange={e => handleChange('serial', e.target.value)} />
+                <input className="form-input" placeholder="e.g. DL-XPS-2291" value={form.serialNumber} onChange={e => handleChange('serialNumber', e.target.value)} />
               </div>
               <div className="form-field">
                 <label>Location <span className="required">*</span></label>
@@ -355,11 +379,11 @@ export default function AssetsPage() {
             <div className="form-grid-2">
               <div className="form-field">
                 <label>Acquisition Date</label>
-                <input className="form-input" type="date" value={form.acquired} onChange={e => handleChange('acquired', e.target.value)} />
+                <input className="form-input" type="date" value={form.purchaseDate} onChange={e => handleChange('purchaseDate', e.target.value)} />
               </div>
               <div className="form-field">
                 <label>Cost (₹)</label>
-                <input className="form-input" type="number" placeholder="e.g. 85000" value={form.cost} onChange={e => handleChange('cost', e.target.value)} />
+                <input className="form-input" type="number" placeholder="e.g. 85000" value={form.purchaseCost} onChange={e => handleChange('purchaseCost', e.target.value)} />
               </div>
             </div>
 
