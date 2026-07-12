@@ -1,0 +1,70 @@
+# ========================
+# Artifacts
+# ========================
+artifacts/
+*.artifact
+
+# ========================
+# Build output
+# ========================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ========================
+# IDE files
+# ========================
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ========================
+# OS files
+# ========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ========================
+# Environment / Secrets
+# ========================
+.env
+*.env
+application-local.yml
+application-prod.yml
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
+
+# ========================
+# Maven (keep wrapper files, ignore local repo cache)
+# ========================
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties

@@ -223,3 +223,9 @@ a:hover {
   padding-left: var(--space-margin);
   padding-right: var(--space-margin);
 }
+
+/* ── Animations ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
