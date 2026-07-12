@@ -6,6 +6,7 @@ import com.assetflow.assetcategory.dto.UpdateCategoryRequest;
 import com.assetflow.assetcategory.entity.AssetCategory;
 import com.assetflow.assetcategory.mapper.CategoryMapper;
 import com.assetflow.assetcategory.repository.AssetCategoryRepository;
+import com.assetflow.asset.repository.AssetRepository;
 import com.assetflow.common.exception.ConflictException;
 import com.assetflow.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class AssetCategoryService {
 
     private final AssetCategoryRepository categoryRepository;
+    private final AssetRepository assetRepository;
     private final CategoryMapper categoryMapper;
 
     @Transactional(readOnly = true)
@@ -66,6 +68,12 @@ public class AssetCategoryService {
         if (!categoryRepository.existsById(id)) {
             throw new ResourceNotFoundException("AssetCategory", "id", id);
         }
+        
+        // Prevent deletion if there are assets tied to this category
+        if (assetRepository.existsByCategoryId(id)) {
+            throw new ConflictException("Cannot delete category because it is still assigned to one or more assets. Please reassign those assets first.");
+        }
+        
         categoryRepository.deleteById(id);
     }
 }
