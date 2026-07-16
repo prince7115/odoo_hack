@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import './AppLayout.css'
 
@@ -16,6 +16,7 @@ const pageTitles = {
 
 export default function AppLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const pageTitle = pageTitles[location.pathname] || 'AssetFlow'
 
   return (
@@ -30,18 +31,18 @@ export default function AppLayout() {
             </p>
           </div>
           <div className="topbar-right">
-            <button className="topbar-icon-btn" title="Search">
+            <button className="topbar-icon-btn" title="Search" onClick={() => navigate('/assets')}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
                 search
               </span>
             </button>
-            <button className="topbar-icon-btn" title="Notifications">
+            <button className="topbar-icon-btn" title="Notifications" onClick={() => navigate('/notifications')}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
                 notifications
               </span>
               <span className="dot"></span>
             </button>
-            <button className="topbar-icon-btn" title="Settings">
+            <button className="topbar-icon-btn" title="Settings" onClick={() => navigate('/org-setup')}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
                 settings
               </span>

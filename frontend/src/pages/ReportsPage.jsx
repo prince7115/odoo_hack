@@ -1,65 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import '../components/shared.css'
 import './ReportsPage.css'
+import assetService from '../services/assetService'
+import allocationService from '../services/allocationService'
+import bookingService from '../services/bookingService'
+import maintenanceService from '../services/maintenanceService'
 
-/* ─── Data ─────────────────────────────── */
-const utilizationData = [
-  { category: 'Electronics',  total: 54, allocated: 42, maintenance: 3,  available: 9  },
-  { category: 'Furniture',    total: 38, allocated: 18, maintenance: 1,  available: 19 },
-  { category: 'Vehicles',     total: 6,  allocated: 4,  maintenance: 2,  available: 0  },
-  { category: 'Lab Equipment',total: 9,  allocated: 7,  maintenance: 1,  available: 1  },
-]
-
-const maintenanceFrequency = [
-  { asset: 'Forklift Komatsu FG25T',     tag: 'AF-0055', count: 8, lastDate: '2026-07-09' },
-  { asset: 'Toyota Innova',              tag: 'AF-0078', count: 6, lastDate: '2026-07-07' },
-  { asset: 'Oscilloscope Rigol DS1054Z', tag: 'AF-0093', count: 5, lastDate: '2026-07-10' },
-  { asset: 'Epson Projector EB-S41',     tag: 'AF-0062', count: 4, lastDate: '2026-07-08' },
-  { asset: 'Dell Laptop XPS 15',         tag: 'AF-0114', count: 2, lastDate: '2026-07-11' },
-]
-
-const mostUsed = [
-  { asset: 'Epson Projector EB-S41',    tag: 'AF-0062', bookings: 34, category: 'Electronics' },
-  { asset: 'Boardroom Table — 12 Seat', tag: 'AF-0011', bookings: 28, category: 'Furniture'   },
-  { asset: 'Toyota Innova',             tag: 'AF-0078', bookings: 22, category: 'Vehicles'    },
-]
-
-const idleAssets = [
-  { asset: 'Canon DSLR EOS 90D',   tag: 'AF-0007', idleDays: 182, category: 'Electronics', status: 'Retired'  },
-  { asset: 'LG 32" Monitor 4K',    tag: 'AF-0022', idleDays: 45,  category: 'Electronics', status: 'Available' },
-  { asset: 'Cisco IP Phone 8841',  tag: 'AF-0130', idleDays: 31,  category: 'Electronics', status: 'Available' },
-]
-
-const monthlyBookings = [
-  { month: 'Feb', count: 18 },
-  { month: 'Mar', count: 24 },
-  { month: 'Apr', count: 31 },
-  { month: 'May', count: 27 },
-  { month: 'Jun', count: 38 },
-  { month: 'Jul', count: 19 },
-]
-
-const statusSummary = [
-  { label: 'Available',    value: 29,  color: '#16a34a', pct: 23 },
-  { label: 'Allocated',    value: 71,  color: '#0052ff', pct: 57 },
-  { label: 'Maintenance',  value: 7,   color: '#d97706', pct: 6  },
-  { label: 'Retired',      value: 18,  color: '#737688', pct: 14 },
-]
-
-const totalAssets = statusSummary.reduce((s, i) => s + i.value, 0)
-
-/* ── Mini Bar Chart ── */
+/* ── Mini Bar Chart per category ── */
 function UtilizationBar({ row }) {
-  const pctAlloc   = Math.round(row.allocated   / row.total * 100)
-  const pctMaint   = Math.round(row.maintenance / row.total * 100)
-  const pctAvail   = Math.round(row.available   / row.total * 100)
+  const total = row.total || 1
+  const pctAlloc  = Math.round(row.allocated   / total * 100)
+  const pctMaint  = Math.round(row.maintenance / total * 100)
+  const pctAvail  = Math.round(row.available   / total * 100)
   return (
     <div className="util-row">
       <div className="util-category">{row.category}</div>
       <div className="util-bar-track">
-        <div className="util-seg util-allocated" style={{ width: `${pctAlloc}%` }} title={`Allocated: ${row.allocated}`} />
+        <div className="util-seg util-allocated"  style={{ width: `${pctAlloc}%` }}  title={`Allocated: ${row.allocated}`} />
         <div className="util-seg util-maintenance" style={{ width: `${pctMaint}%` }} title={`Maintenance: ${row.maintenance}`} />
-        <div className="util-seg util-available" style={{ width: `${pctAvail}%` }} title={`Available: ${row.available}`} />
+        <div className="util-seg util-available"  style={{ width: `${pctAvail}%` }}  title={`Available: ${row.available}`} />
       </div>
       <div className="util-numbers">
         <span className="util-num allocated">{row.allocated} allocated</span>
@@ -70,72 +29,149 @@ function UtilizationBar({ row }) {
   )
 }
 
-/* ── Monthly Booking Bars ── */
-function BookingChart() {
-  const maxCount = Math.max(...monthlyBookings.map(m => m.count))
+/* ── Bar Chart for bookings per month ── */
+function BookingChart({ data }) {
+  const maxCount = Math.max(...data.map(m => m.count), 1)
   return (
     <div className="booking-chart">
-      {monthlyBookings.map(m => (
+      {data.map(m => (
         <div key={m.month} className="booking-chart-bar-wrap">
           <div className="booking-chart-bar" style={{ height: `${(m.count / maxCount) * 100}%` }}>
             <span className="booking-chart-val">{m.count}</span>
           </div>
-          <span className="booking-chart-month">{m.month}</span>
+          <span className="booking-chart-label">{m.month}</span>
         </div>
       ))}
     </div>
   )
 }
 
-/* ── Donut Chart (CSS) ── */
-function DonutChart() {
-  let offset = 0
-  const circumference = 2 * Math.PI * 40
-  const segments = statusSummary.map(s => {
-    const dash = (s.pct / 100) * circumference
-    const gap  = circumference - dash
-    const seg  = { ...s, dash, gap, offset }
-    offset += dash
-    return seg
-  })
-
-  return (
-    <div className="donut-wrap">
-      <svg viewBox="0 0 100 100" className="donut-svg">
-        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--surface-container)" strokeWidth="18" />
-        {segments.map((s, i) => (
-          <circle key={i} cx="50" cy="50" r="40" fill="none"
-            stroke={s.color} strokeWidth="18"
-            strokeDasharray={`${s.dash} ${s.gap}`}
-            strokeDashoffset={-s.offset}
-            style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
-          />
-        ))}
-        <text x="50" y="46" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--on-surface)">{totalAssets}</text>
-        <text x="50" y="57" textAnchor="middle" fontSize="6"  fill="var(--on-surface-variant)">Total Assets</text>
-      </svg>
-      <div className="donut-legend">
-        {statusSummary.map(s => (
-          <div key={s.label} className="donut-legend-item">
-            <span className="donut-legend-dot" style={{ background: s.color }} />
-            <span className="donut-legend-label">{s.label}</span>
-            <span className="donut-legend-value">{s.value} <span style={{ color: 'var(--outline)' }}>({s.pct}%)</span></span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export default function ReportsPage() {
-  const [activeReport, setActiveReport] = useState('overview')
+  const [assets, setAssets]           = useState([])
+  const [allocations, setAllocations] = useState([])
+  const [bookings, setBookings]       = useState([])
+  const [maintenances, setMaintenances] = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState(null)
 
-  const REPORTS = [
-    { id: 'overview',     label: 'Overview',         icon: 'dashboard' },
-    { id: 'utilization',  label: 'Utilization',       icon: 'bar_chart' },
-    { id: 'maintenance',  label: 'Maintenance',       icon: 'build' },
-    { id: 'bookings',     label: 'Booking Trends',   icon: 'event' },
+  const fetchData = useCallback(async () => {
+    setLoading(true); setError(null)
+    try {
+      const [asRes, alRes, bRes, mRes] = await Promise.all([
+        assetService.getAll(),
+        allocationService.getAll(),
+        bookingService.getAll(),
+        maintenanceService.getAll(),
+      ])
+      setAssets(asRes.data || asRes || [])
+      setAllocations(alRes.data || alRes || [])
+      setBookings(bRes.data || bRes || [])
+      setMaintenances(mRes.data || mRes || [])
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load report data')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  /* ── Compute all analytics from live data ── */
+
+  // Status summary
+  const statusSummary = [
+    { label: 'Available',   value: assets.filter(a => a.status === 'AVAILABLE').length,         color: '#16a34a' },
+    { label: 'Allocated',   value: assets.filter(a => a.status === 'ALLOCATED').length,          color: '#0052ff' },
+    { label: 'Maintenance', value: assets.filter(a => a.status === 'UNDER_MAINTENANCE').length,  color: '#d97706' },
+    { label: 'Disposed',    value: assets.filter(a => a.status === 'DISPOSED').length,            color: '#737688' },
   ]
+  const totalAssets = assets.length
+
+  // Utilization by category
+  const categoryMap = {}
+  assets.forEach(a => {
+    const cat = a.category?.name || 'Uncategorized'
+    if (!categoryMap[cat]) categoryMap[cat] = { category: cat, total: 0, allocated: 0, maintenance: 0, available: 0 }
+    categoryMap[cat].total++
+    if (a.status === 'ALLOCATED')        categoryMap[cat].allocated++
+    else if (a.status === 'UNDER_MAINTENANCE') categoryMap[cat].maintenance++
+    else if (a.status === 'AVAILABLE')   categoryMap[cat].available++
+  })
+  const utilizationData = Object.values(categoryMap).sort((a, b) => b.total - a.total)
+
+  // Maintenance frequency by asset
+  const maintFreqMap = {}
+  maintenances.forEach(m => {
+    const name = m.asset?.name || 'Unknown'
+    const tag  = m.asset?.assetTag || ''
+    const key  = m.asset?._id || name
+    if (!maintFreqMap[key]) maintFreqMap[key] = { asset: name, tag, count: 0, lastDate: null }
+    maintFreqMap[key].count++
+    const d = m.createdAt
+    if (!maintFreqMap[key].lastDate || d > maintFreqMap[key].lastDate) maintFreqMap[key].lastDate = d
+  })
+  const maintenanceFrequency = Object.values(maintFreqMap)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8)
+    .map(m => ({ ...m, lastDate: m.lastDate ? new Date(m.lastDate).toISOString().slice(0, 10) : '—' }))
+
+  // Most booked assets
+  const bookingCountMap = {}
+  bookings.forEach(b => {
+    const name = b.asset?.name || 'Unknown'
+    const tag  = b.asset?.assetTag || ''
+    const cat  = b.asset?.category?.name || 'Unknown'
+    const key  = b.asset?._id || name
+    if (!bookingCountMap[key]) bookingCountMap[key] = { asset: name, tag, category: cat, bookings: 0 }
+    bookingCountMap[key].bookings++
+  })
+  const mostUsed = Object.values(bookingCountMap)
+    .sort((a, b) => b.bookings - a.bookings)
+    .slice(0, 5)
+
+  // Monthly bookings (last 6 months)
+  const monthlyBookings = (() => {
+    const months = []
+    const now = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      months.push({
+        month: d.toLocaleString('default', { month: 'short' }),
+        year: d.getFullYear(),
+        monthNum: d.getMonth(),
+        count: 0,
+      })
+    }
+    bookings.forEach(b => {
+      const d = new Date(b.createdAt)
+      const m = months.find(mo => mo.year === d.getFullYear() && mo.monthNum === d.getMonth())
+      if (m) m.count++
+    })
+    return months
+  })()
+
+  // Idle/available assets sorted by last allocation date
+  const allocationDateMap = {}
+  allocations.forEach(a => {
+    const key = a.asset?._id
+    if (!key) return
+    const d = a.createdAt
+    if (!allocationDateMap[key] || d > allocationDateMap[key]) allocationDateMap[key] = d
+  })
+  const idleAssets = assets
+    .filter(a => a.status === 'AVAILABLE')
+    .map(a => {
+      const lastUsed = allocationDateMap[a._id]
+      const idleDays = lastUsed ? Math.floor((Date.now() - new Date(lastUsed)) / 86400000) : 999
+      return { asset: a.name, tag: a.assetTag, category: a.category?.name || 'N/A', status: a.status, idleDays }
+    })
+    .sort((a, b) => b.idleDays - a.idleDays)
+    .slice(0, 8)
+
+  // Summary KPIs
+  const activeAllocations = allocations.filter(a => a.status === 'ACTIVE').length
+  const pendingBookings    = bookings.filter(b => b.status === 'PENDING').length
+  const openMaintenance    = maintenances.filter(m => ['PENDING', 'APPROVED', 'IN_PROGRESS'].includes(m.status)).length
 
   return (
     <div className="reports-page">
@@ -146,186 +182,211 @@ export default function ReportsPage() {
           <h1>Reports & Analytics</h1>
         </div>
         <div className="page-header-actions">
-          <button className="btn btn-secondary">
-            <span className="material-symbols-outlined">download</span> Export CSV
-          </button>
-          <button className="btn btn-secondary">
-            <span className="material-symbols-outlined">picture_as_pdf</span> Export PDF
+          <button className="btn btn-secondary" onClick={fetchData}>
+            <span className="material-symbols-outlined">refresh</span> Refresh
           </button>
         </div>
       </div>
 
-      {/* ── Report Tabs ── */}
-      <div className="tabs">
-        {REPORTS.map(r => (
-          <button key={r.id} className={`tab-btn ${activeReport === r.id ? 'active' : ''}`} onClick={() => setActiveReport(r.id)}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{r.icon}</span>
-            {r.label}
-          </button>
-        ))}
-      </div>
+      {error && (
+        <div style={{ background: 'var(--error-container)', color: 'var(--error)', padding: '12px 16px', borderRadius: 'var(--radius-default)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>error</span>
+          {error}
+        </div>
+      )}
 
-      {/* ── OVERVIEW ── */}
-      {activeReport === 'overview' && (
-        <div className="reports-content">
-          {/* KPI Cards */}
+      {loading ? (
+        <div className="empty-state">
+          <span className="material-symbols-outlined" style={{ animation: 'spin 1s linear infinite' }}>progress_activity</span>
+          <p>Loading reports…</p>
+        </div>
+      ) : (
+        <>
+          {/* ── KPI Strip ── */}
           <div className="reports-kpi-grid">
-            <div className="report-kpi-card">
-              <span className="material-symbols-outlined report-kpi-icon" style={{ color: '#0052ff' }}>inventory_2</span>
-              <div>
-                <div className="report-kpi-value">{totalAssets}</div>
-                <div className="report-kpi-label">Total Assets</div>
-              </div>
+            <div className="reports-kpi-card">
+              <span className="material-symbols-outlined" style={{ color: '#0052ff' }}>inventory_2</span>
+              <div><div className="reports-kpi-val">{totalAssets}</div><div className="reports-kpi-label">Total Assets</div></div>
             </div>
-            <div className="report-kpi-card">
-              <span className="material-symbols-outlined report-kpi-icon" style={{ color: '#16a34a' }}>assignment_ind</span>
-              <div>
-                <div className="report-kpi-value">71</div>
-                <div className="report-kpi-label">Active Allocations</div>
-              </div>
+            <div className="reports-kpi-card">
+              <span className="material-symbols-outlined" style={{ color: '#0052ff' }}>assignment_ind</span>
+              <div><div className="reports-kpi-val">{activeAllocations}</div><div className="reports-kpi-label">Active Allocations</div></div>
             </div>
-            <div className="report-kpi-card">
-              <span className="material-symbols-outlined report-kpi-icon" style={{ color: '#d97706' }}>build</span>
-              <div>
-                <div className="report-kpi-value">7</div>
-                <div className="report-kpi-label">Under Maintenance</div>
-              </div>
+            <div className="reports-kpi-card">
+              <span className="material-symbols-outlined" style={{ color: '#d97706' }}>event_available</span>
+              <div><div className="reports-kpi-val">{pendingBookings}</div><div className="reports-kpi-label">Pending Bookings</div></div>
             </div>
-            <div className="report-kpi-card">
-              <span className="material-symbols-outlined report-kpi-icon" style={{ color: '#7c3aed' }}>event</span>
-              <div>
-                <div className="report-kpi-value">157</div>
-                <div className="report-kpi-label">Total Bookings (YTD)</div>
-              </div>
+            <div className="reports-kpi-card">
+              <span className="material-symbols-outlined" style={{ color: '#ba1a1a' }}>build</span>
+              <div><div className="reports-kpi-val">{openMaintenance}</div><div className="reports-kpi-label">Open Maintenance</div></div>
             </div>
           </div>
 
-          <div className="reports-two-col">
-            {/* Donut Chart */}
-            <div className="report-card">
-              <div className="report-card-header">
-                <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--primary)' }}>donut_large</span>
-                Asset Status Distribution
-              </div>
-              <DonutChart />
-            </div>
+          {/* ── Row 1: Status Donut + Utilization by Category ── */}
+          <div className="reports-row">
 
-            {/* Idle Assets */}
-            <div className="report-card">
-              <div className="report-card-header">
-                <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--warning)' }}>schedule</span>
-                Long-Idle Assets
-              </div>
-              <div className="report-list">
-                {idleAssets.map(a => (
-                  <div key={a.tag} className="report-list-item">
-                    <div>
-                      <code className="asset-tag-sm">{a.tag}</code>
-                      <div style={{ fontWeight: 500, fontSize: 13, marginTop: 4 }}>{a.asset}</div>
+            {/* Status breakdown */}
+            <div className="section-card reports-card">
+              <div className="section-card-header">Asset Status Distribution</div>
+              <div className="status-donut-wrap">
+                <svg viewBox="0 0 120 120" className="status-donut">
+                  {(() => {
+                    let offset = 0
+                    const circumference = 2 * Math.PI * 40
+                    return statusSummary.map(s => {
+                      const pct = totalAssets > 0 ? s.value / totalAssets : 0
+                      const dash = pct * circumference
+                      const el = (
+                        <circle key={s.label} cx="60" cy="60" r="40"
+                          fill="none" stroke={s.color} strokeWidth="18"
+                          strokeDasharray={`${dash} ${circumference - dash}`}
+                          strokeDashoffset={-offset * circumference}
+                          transform="rotate(-90 60 60)"
+                        />
+                      )
+                      offset += pct
+                      return el
+                    })
+                  })()}
+                  <text x="60" y="56" textAnchor="middle" fontSize="18" fontWeight="700" fill="var(--on-surface)">{totalAssets}</text>
+                  <text x="60" y="70" textAnchor="middle" fontSize="9" fill="var(--on-surface-variant)">Total Assets</text>
+                </svg>
+                <div className="donut-legend">
+                  {statusSummary.map(s => (
+                    <div key={s.label} className="donut-legend-item">
+                      <span className="donut-dot" style={{ background: s.color }} />
+                      <span>{s.label}</span>
+                      <span className="donut-val">{s.value}</span>
+                      <span className="donut-pct">{totalAssets > 0 ? Math.round(s.value / totalAssets * 100) : 0}%</span>
                     </div>
-                    <div className="idle-badge">
-                      <span className="material-symbols-outlined" style={{ fontSize: 13 }}>hourglass_empty</span>
-                      {a.idleDays}d idle
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── UTILIZATION ── */}
-      {activeReport === 'utilization' && (
-        <div className="reports-content">
-          <div className="report-card" style={{ maxWidth: 800 }}>
-            <div className="report-card-header">
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--primary)' }}>bar_chart</span>
-              Asset Utilization by Category
-            </div>
-            <div className="util-legend">
-              <span className="util-legend-item"><span className="util-dot allocated" />Allocated</span>
-              <span className="util-legend-item"><span className="util-dot maintenance" />Maintenance</span>
-              <span className="util-legend-item"><span className="util-dot available" />Available</span>
-            </div>
-            <div className="util-chart">
-              {utilizationData.map(row => <UtilizationBar key={row.category} row={row} />)}
-            </div>
-          </div>
-
-          <div className="report-card" style={{ maxWidth: 800 }}>
-            <div className="report-card-header">
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#16a34a' }}>trending_up</span>
-              Most Utilized Resources (Bookings)
-            </div>
-            <div className="report-list">
-              {mostUsed.map((a, i) => (
-                <div key={a.tag} className="report-list-item">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span className="rank-badge">{i + 1}</span>
-                    <div>
-                      <code className="asset-tag-sm">{a.tag}</code>
-                      <div style={{ fontWeight: 500, fontSize: 13, marginTop: 3 }}>{a.asset}</div>
-                    </div>
-                  </div>
-                  <div className="booking-count-badge">{a.bookings} bookings</div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* ── MAINTENANCE ── */}
-      {activeReport === 'maintenance' && (
-        <div className="reports-content">
-          <div className="report-card" style={{ maxWidth: 700 }}>
-            <div className="report-card-header">
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#d97706' }}>build</span>
-              Maintenance Frequency (All Time)
+            {/* Utilization by category */}
+            <div className="section-card reports-card">
+              <div className="section-card-header">
+                Utilization by Category
+                <div className="util-legend-inline">
+                  <span className="util-dot util-allocated" /> Allocated
+                  <span className="util-dot util-maintenance" /> Maintenance
+                  <span className="util-dot util-available" /> Available
+                </div>
+              </div>
+              <div className="util-body">
+                {utilizationData.length === 0 ? (
+                  <div className="empty-state"><span className="material-symbols-outlined">category</span><p>No category data</p></div>
+                ) : (
+                  utilizationData.map(row => <UtilizationBar key={row.category} row={row} />)
+                )}
+              </div>
             </div>
-            <div className="report-list">
-              {maintenanceFrequency.map((a, i) => {
-                const maxCount = maintenanceFrequency[0].count
-                const pct = Math.round(a.count / maxCount * 100)
-                return (
-                  <div key={a.tag} className="maint-freq-item">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                      <span className="rank-badge">{i + 1}</span>
-                      <div>
-                        <code className="asset-tag-sm">{a.tag}</code>
-                        <div style={{ fontWeight: 500, fontSize: 13, marginTop: 3 }}>{a.asset}</div>
-                      </div>
-                    </div>
-                    <div className="maint-freq-right">
-                      <div className="maint-freq-bar-wrap">
-                        <div className="maint-freq-bar" style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="maint-count">{a.count}×</span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="table-footer" style={{ marginTop: 0 }}>Last maintenance records from 2026</div>
           </div>
-        </div>
-      )}
 
-      {/* ── BOOKINGS ── */}
-      {activeReport === 'bookings' && (
-        <div className="reports-content">
-          <div className="report-card" style={{ maxWidth: 700 }}>
-            <div className="report-card-header">
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#7c3aed' }}>event</span>
-              Monthly Booking Volume (2026)
+          {/* ── Row 2: Monthly Bookings + Most Used ── */}
+          <div className="reports-row">
+            <div className="section-card reports-card">
+              <div className="section-card-header">Monthly Booking Trend</div>
+              {bookings.length === 0 ? (
+                <div className="empty-state"><span className="material-symbols-outlined">event</span><p>No bookings yet</p></div>
+              ) : (
+                <BookingChart data={monthlyBookings} />
+              )}
             </div>
-            <BookingChart />
-            <div className="booking-chart-legend">
-              <span style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>Feb – Jul 2026 · Total bookings: {monthlyBookings.reduce((s, m) => s + m.count, 0)}</span>
+
+            <div className="section-card reports-card">
+              <div className="section-card-header">Most Booked Resources</div>
+              {mostUsed.length === 0 ? (
+                <div className="empty-state"><span className="material-symbols-outlined">event_available</span><p>No booking data yet</p></div>
+              ) : (
+                <div className="most-used-list">
+                  {mostUsed.map((m, idx) => (
+                    <div key={m.tag} className="most-used-row">
+                      <span className="most-used-rank">#{idx + 1}</span>
+                      <div className="most-used-info">
+                        <code className="asset-tag-sm">{m.tag}</code>
+                        <span className="most-used-name">{m.asset}</span>
+                        <span className="badge badge-inactive">{m.category}</span>
+                      </div>
+                      <div className="most-used-bar-wrap">
+                        <div className="most-used-bar" style={{ width: `${(m.bookings / (mostUsed[0]?.bookings || 1)) * 100}%` }} />
+                      </div>
+                      <span className="most-used-count">{m.bookings} bookings</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
+
+          {/* ── Row 3: Maintenance Frequency + Idle Assets ── */}
+          <div className="reports-row">
+            <div className="section-card reports-card">
+              <div className="section-card-header">Maintenance Frequency</div>
+              {maintenanceFrequency.length === 0 ? (
+                <div className="empty-state"><span className="material-symbols-outlined">build</span><p>No maintenance records yet</p></div>
+              ) : (
+                <div className="table-card" style={{ boxShadow: 'none', border: 'none', marginTop: 0 }}>
+                  <table>
+                    <thead>
+                      <tr><th>Asset</th><th>Tag</th><th>Incidents</th><th>Last Date</th></tr>
+                    </thead>
+                    <tbody>
+                      {maintenanceFrequency.map(m => (
+                        <tr key={m.tag}>
+                          <td style={{ fontWeight: 500, fontSize: 13 }}>{m.asset}</td>
+                          <td><code className="asset-tag-sm">{m.tag}</code></td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ width: 60, height: 6, borderRadius: 3, background: 'var(--surface-container)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${(m.count / (maintenanceFrequency[0]?.count || 1)) * 100}%`, background: '#d97706', borderRadius: 3 }} />
+                              </div>
+                              <span style={{ fontWeight: 600, color: '#d97706' }}>{m.count}</span>
+                            </div>
+                          </td>
+                          <td style={{ fontSize: 13, color: 'var(--on-surface-variant)' }}>{m.lastDate}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="section-card reports-card">
+              <div className="section-card-header">Idle / Unallocated Assets</div>
+              {idleAssets.length === 0 ? (
+                <div className="empty-state"><span className="material-symbols-outlined">inventory_2</span><p>All assets are in use!</p></div>
+              ) : (
+                <div className="table-card" style={{ boxShadow: 'none', border: 'none', marginTop: 0 }}>
+                  <table>
+                    <thead>
+                      <tr><th>Asset</th><th>Category</th><th>Idle Days</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                      {idleAssets.map(a => (
+                        <tr key={a.tag}>
+                          <td>
+                            <code className="asset-tag-sm">{a.tag}</code>
+                            <div style={{ fontWeight: 500, fontSize: 13, marginTop: 2 }}>{a.asset}</div>
+                          </td>
+                          <td style={{ fontSize: 13, color: 'var(--on-surface-variant)' }}>{a.category}</td>
+                          <td>
+                            <span style={{ fontWeight: 600, color: a.idleDays > 90 ? '#ba1a1a' : a.idleDays > 30 ? '#d97706' : '#16a34a' }}>
+                              {a.idleDays === 999 ? 'Never used' : `${a.idleDays}d`}
+                            </span>
+                          </td>
+                          <td><span className="badge badge-success">{a.status}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

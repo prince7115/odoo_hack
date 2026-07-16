@@ -22,6 +22,156 @@
   gap: var(--space-sm);
 }
 
+.reports-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+}
+
+.reports-kpi-val {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.reports-kpi-label {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+
+/* ── Two-column row ── */
+.reports-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.reports-card {
+  min-width: 0;
+}
+
+/* ── Status Donut ── */
+.status-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.status-donut {
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+
+.donut-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.donut-val {
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-left: auto;
+}
+
+.donut-pct {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  min-width: 30px;
+  text-align: right;
+}
+
+/* ── Utilization body ── */
+.util-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.util-legend-inline {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  margin-left: auto;
+  align-items: center;
+}
+
+/* ── Most used list ── */
+.most-used-list {
+  display: flex;
+  flex-direction: column;
+  padding: 12px var(--space-md);
+  gap: 12px;
+}
+
+.most-used-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.most-used-rank {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  min-width: 24px;
+}
+
+.most-used-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.most-used-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.most-used-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--surface-container);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.most-used-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-container), var(--primary));
+  border-radius: 4px;
+  transition: width 0.4s;
+}
+
+.most-used-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  min-width: 80px;
+  text-align: right;
+}
+
+/* ── Booking chart label ── */
+.booking-chart-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+}
+
+
+
 .report-kpi-card {
   display: flex;
   align-items: center;

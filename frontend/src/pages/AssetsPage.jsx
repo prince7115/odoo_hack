@@ -157,8 +157,8 @@ export default function AssetsPage() {
       await assetService.create({
         name: form.name,
         description: form.description,
-        categoryId: Number(form.categoryId),
-        departmentId: form.departmentId ? Number(form.departmentId) : null,
+        categoryId: form.categoryId,
+        departmentId: form.departmentId ? form.departmentId : null,
         serialNumber: form.serialNumber,
         location: form.location,
         assetCondition: form.condition || 'NEW',
@@ -358,7 +358,7 @@ export default function AssetsPage() {
                 <label>Category <span className="required">*</span></label>
                 <select className="form-input form-select" value={form.categoryId} onChange={e => handleChange('categoryId', e.target.value)}>
                   <option value="">Select…</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="form-field">
